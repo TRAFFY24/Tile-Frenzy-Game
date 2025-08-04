@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tile Frenzy Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #1e1e1e;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background-color: #332;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tile Frenzy Game</h1>
+    <p>Score: <span id="score">0</span></p>
+    <p>Time: <span id="timer">30</span></p>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreElement = document.getElementById('score');
+const timerElement = document.getElementById('timer');
+
+const TILE_SIZE = 62;
+const TILE_COLOR = '#B4ff33';
+const HIGHLIGHT_COLOR = '#ffff00';
+const GAME_TIME = 60; // in seconds
+
+let tiles = [];
+let score = 0;
+let gameTime = GAME_TIME;
+let gameInterval, timerInterval;
+
+// Tile Class
+class Tile {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = TILE_SIZE;
+        this.color = TILE_COLOR;
+        this.highlighted = false;
+    }
+
+    draw() {
+        ctx.fillStyle = this.highlighted ? HIGHLIGHT_COLOR : this.color;
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+    }
+
+    isClicked(mouseX, mouseY) {
+        return mouseX > this.x && mouseX < this.x + this.size &&
+               mouseY > this.y && mouseY < this.y + this.size;
+    }
+
+    highlight() {
+        this.highlighted = true;
+    }
+
+    reset() {
+        this.highlighted = false;
+    }
+}
+
+// Helper functions
+function getRandomPosition() {
+    const x = Math.floor(Math.random() * (canvas.width - TILE_SIZE));
+    const y = Math.floor(Math.random() * (canvas.height - TILE_SIZE));
+    return { x, y };
+}
+
+function spawnTile() {
+    const { x, y } = getRandomPosition();
+    tiles.push(new Tile(x, y));
+}
+
+function updateScore() {
+    score++;
+    scoreElement.textContent = score;
+}
+
+function updateTimer() {
+    gameTime--;
+    timerElement.textContent = gameTime;
+    if (gameTime <= 0) {
+        endGame();
+    }
+}
+
+function endGame() {
+    clearInterval(gameInterval);
+    clearInterval(timerInterval);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.font = '36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Game Over! Final Score: ${score}`, canvas.width / 2, canvas.height / 2);
+}
+
+function resetGame() {
+    tiles = [];
+    score = 0;
+    gameTime = GAME_TIME;
+    scoreElement.textContent = score;
+    timerElement.textContent = gameTime;
+    spawnTile();
+    gameInterval = setInterval(() => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        tiles.forEach(tile => tile.draw());
+    }, 1000 / 60);
+    timerInterval = setInterval(updateTimer, 1000);
+}
+
+// Event Listeners
+canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    for (let i = 0; i < tiles.length; i++) {
+        if (tiles[i].isClicked(mouseX, mouseY)) {
+            updateScore();
+            tiles.splice(i, 1);
+            spawnTile();
+            break;
+        }
+    }
+});
+
+// Start the game
+resetGame();
+</script>
+</body>
+</html>
